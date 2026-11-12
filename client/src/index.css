@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
   color: #e0e1dd;
-  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 32%, #415a77 100%);
+  background: linear-gradient(180deg, #eaf1f7 0%, #dfeaf3 25%, #d4dfe9 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,26 +24,36 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(110, 153, 189, 0.22), transparent 30%),
-    radial-gradient(circle at 80% 15%, rgba(119, 141, 169, 0.13), transparent 28%),
-    linear-gradient(180deg, #0a1826 0%, #122b3d 24%, #1f3b52 48%, #2d4968 100%);
-  background-size: 160% 160%;
-  animation: ambientPulse 16s ease-in-out infinite alternate;
+  position: relative;
+  background: linear-gradient(120deg, #e9eff5, #d6e1ec, #e4e9f0, #cdd9e6, #e9eff5);
+  background-size: 300% 300%;
+  animation: bgShift 32s ease-in-out infinite;
 }
 
-@keyframes ambientPulse {
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.45), transparent 60%);
+}
+
+@keyframes bgShift {
   0% {
-    background-position: 50% 0%, 50% 0%, 50% 0%;
-    filter: saturate(1.02) brightness(0.98);
+    background-position: 0% 50%;
   }
   50% {
-    background-position: 52% 32%, 48% 30%, 52% 40%;
-    filter: saturate(1.12) brightness(1.04);
+    background-position: 100% 50%;
   }
   100% {
-    background-position: 46% 100%, 55% 90%, 48% 100%;
-    filter: saturate(1.06) brightness(1);
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    animation: none;
   }
 }
 

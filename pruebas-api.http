@@ -170,3 +170,77 @@ Content-Type: application/json
     "paginaAdicional": 0
   }
 }
+
+### 18. Consultar catálogo de servicios
+GET http://localhost:3001/api/catalogo
+
+### 19. Propuesta: ejemplo del restaurante (sin pendientes)
+POST http://localhost:3001/api/propuesta
+Content-Type: application/json
+
+{
+  "nombre": "Restaurante La Brasa (ficticio)",
+  "descripcion": "Necesito una web para un restaurante. Quiero mostrar la carta, tener un formulario para solicitar reservas y ofrecer el contenido en dos idiomas."
+}
+
+### 20. Propuesta: necesidades fuera del catálogo (pendientes de valorar)
+POST http://localhost:3001/api/propuesta
+Content-Type: application/json
+
+{
+  "nombre": "Moda Ejemplo S.L. (ficticio)",
+  "descripcion": "Quiero una tienda online con pasarela de pago y un blog."
+}
+
+
+### 21. Error: descripción vacía
+POST http://localhost:3001/api/propuesta
+Content-Type: application/json
+
+{
+  "nombre": "Cliente Prueba (ficticio)",
+  "descripcion": "   "
+}
+
+### 22. Error: falta el nombre del cliente
+POST http://localhost:3001/api/propuesta
+Content-Type: application/json
+
+{
+  "descripcion": "Necesito una landing para presentar mi academia de idiomas."
+}
+
+### 23. Presupuesto de una selección confirmada
+POST http://localhost:3001/api/presupuesto/seleccion
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id": "corporativa" },
+    { "id": "paginaAdicional", "cantidad": 3 },
+    { "id": "formulario" },
+    { "id": "segundoIdioma" }
+  ]
+}
+
+### 24. Error: falta la cantidad de páginas adicionales
+POST http://localhost:3001/api/presupuesto/seleccion
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id": "landing" },
+    { "id": "paginaAdicional" }
+  ]
+}
+
+### 25. Error: servicio que no está en el catálogo
+POST http://localhost:3001/api/presupuesto/seleccion
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id": "landing" },
+    { "id": "tiendaOnline" }
+  ]
+}
