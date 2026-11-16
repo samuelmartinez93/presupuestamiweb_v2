@@ -1698,3 +1698,17 @@ a:focus-visible {
     animation: none !important;
   }
 }
+
+/* Aviso de fallo de la IA con opción de reintentar */
+.aviso-reintentar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.aviso-reintentar .secondary-button {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.86rem;
+}

@@ -18,6 +18,11 @@ se revisa y descarga un **presupuesto en PDF**.
 
 Los presupuestos no se guardan en una base de datos.
 
+**Entrega**
+
+- Aplicación publicada: https://presupuestamiwebv2.vercel.app/
+- Repositorio: https://github.com/samuelmartinez93/presupuestamiweb_v2
+
 Esquema del proyecto:
 
 ```text
@@ -198,6 +203,7 @@ Resumen del trabajo realizado, en orden:
 | **3. API de OpenAI** | Llamada desde el servidor con la clave en `OPENAI_API_KEY` (fuera del repositorio). Se envían la descripción y el catálogo. Respuesta en JSON Schema estricto con resumen, ids, justificación, dudas y pendientes. Se comprueba que cada id existe y se filtran precios y plazos. | `server/src/ia.js` |
 | **4. Revisar y calcular** | Se muestran los servicios con su explicación. Se pueden aceptar, quitar y añadir del catálogo. Si falta un dato (tipo de web o número de páginas adicionales), no se puede continuar. El servidor calcula con las tarifas programadas. | `client/src/App.jsx`, `server/src/validarSeleccion.js`, `POST /api/presupuesto/seleccion` |
 | **5. PDF** | Botón de descarga con miniatura del documento, revisión editable y vista previa real antes de aceptar. Incluye cliente, fecha, resumen, servicios con descripción, desglose, total y aclaraciones. Estudio de librerías en el apartado 13. | `client/src/pdf/` |
+| **6. Comprobar el funcionamiento** | Las seis situaciones pedidas se han probado en local y en la versión publicada (ver apartado 16). Si la IA falla, se informa al usuario y puede reintentarlo con un botón. El PDF usa siempre la selección final y los importes del servidor. | `client/src/App.jsx`, `server/src/server.js` |
 
 ## 4. Organización y responsabilidades
 
@@ -541,6 +547,21 @@ profesional, inspirado en configuradores de presupuestos web.
 
 Un 400 en una prueba diseñada con datos inválidos es el resultado correcto de
 la validación, no un fallo.
+
+### Paso 6 — Situaciones comprobadas
+
+| Situación | Resultado obtenido |
+|---|---|
+| Solicitud clara que encaja con el catálogo (restaurante del enunciado) | La IA propone web corporativa, páginas adicionales, formulario y segundo idioma, con su justificación. |
+| Solicitud ambigua («quiero algo en internet para mi negocio») | Propuesta mínima y una lista de dudas para aclarar con el cliente (objetivo, formulario, idiomas, contenidos…). |
+| Servicio que no se ofrece (tienda online con pagos) | No se inventa ningún servicio: tienda, carrito y pasarela de pago aparecen como **pendientes de valorar**, sin precio. |
+| Descripción vacía | El servidor responde 400 y la interfaz muestra el motivo sin llamar a la IA. |
+| Fallo en la llamada a OpenAI (clave inválida) | Se informa al usuario con un aviso, se muestra la propuesta automática y el botón **«Reintentar con IA»** permite volver a intentarlo. Si no hay conexión con el servidor, se muestra un mensaje para intentarlo de nuevo. |
+| Modificación de servicios antes del PDF | Se quita un servicio y se cambia el número de páginas: el PDF muestra solo la selección final, el total calculado por el servidor y, en aclaraciones, qué cambió respecto a la propuesta. |
+
+Además, si se analiza un cliente nuevo después de calcular, el presupuesto
+anterior se descarta para que el PDF nunca mezcle datos de dos clientes. Un
+mensaje ajeno a los presupuestos web recibe el aviso del apartado 9.
 
 ### Pruebas de la interfaz
 

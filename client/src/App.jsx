@@ -278,8 +278,9 @@ function App() {
     })
   }
 
+  // Se llama desde el formulario o desde «Reintentar con IA» (sin evento).
   const manejarPropuesta = async (event) => {
-    event.preventDefault()
+    event?.preventDefault()
 
     if (isAnalizando) {
       return
@@ -328,6 +329,9 @@ function App() {
       }
 
       setPropuesta(datos)
+      // Una propuesta nueva invalida el presupuesto anterior: así el PDF nunca mezcla dos clientes.
+      setPresupuesto(null)
+      setFormularioDesdeIA(false)
       setSeleccion(
         datos.servicios.map((servicio) => ({
           id: servicio.id,
@@ -339,7 +343,11 @@ function App() {
       )
       setSeleccionError('')
     } catch (error) {
-      setPropuestaError(error.message || 'No se pudo analizar la solicitud.')
+      setPropuestaError(
+        error instanceof TypeError
+          ? 'No se puede conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.'
+          : `${error.message || 'No se pudo analizar la solicitud.'} Inténtalo de nuevo.`
+      )
     } finally {
       setIsAnalizando(false)
     }
@@ -477,7 +485,31 @@ function App() {
       .map((linea) => (linea.cantidad > 1 ? `${linea.nombre} (× ${linea.cantidad})` : linea.nombre))
       .join(', ')
 
+    // Si el cliente cambió la propuesta, se indica para que el resumen y la tabla sean coherentes.
+    const cambios = []
+    if (propuesta && presupuesto?.lineas) {
+      const propuestos = new Map(propuesta.servicios.map((servicio) => [servicio.id, servicio]))
+      const finales = new Map(presupuesto.lineas.map((linea) => [linea.id, linea]))
+      const nombres = (ids) => ids.map((id) => infoServicio(id).nombre).join(', ')
+
+      const anadidos = [...finales.keys()].filter((id) => !propuestos.has(id))
+      const descartados = [...propuestos.keys()].filter((id) => !finales.has(id))
+      const paginasPropuestas = propuestos.get('paginaAdicional')?.cantidad
+      const paginasFinales = finales.get('paginaAdicional')?.cantidad
+
+      if (anadidos.length > 0) {
+        cambios.push(`Servicios añadidos por el cliente a la propuesta: ${nombres(anadidos)}.`)
+      }
+      if (descartados.length > 0) {
+        cambios.push(`Servicios propuestos que el cliente ha descartado: ${nombres(descartados)}.`)
+      }
+      if (paginasPropuestas && paginasFinales && paginasPropuestas !== paginasFinales) {
+        cambios.push(`Páginas adicionales ajustadas por el cliente: de ${paginasPropuestas} a ${paginasFinales}.`)
+      }
+    }
+
     const aclaraciones = [
+      ...cambios,
       ...(propuesta?.pendientes || []).map((item) => `${item.necesidad}: ${item.motivo}`),
       ...(propuesta?.dudas || [])
     ]
@@ -1080,7 +1112,20 @@ function App() {
                     </span>
                   </div>
 
-                  {propuesta.aviso && <p className="alert alert-suave">{propuesta.aviso}</p>}
+                  {propuesta.aviso && (
+                    <div className="alert alert-suave aviso-reintentar" role="status">
+                      <span>{propuesta.aviso}</span>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => manejarPropuesta()}
+                        disabled={isAnalizando}
+                        aria-busy={isAnalizando}
+                      >
+                        {isAnalizando ? 'Reintentando…' : 'Reintentar con IA'}
+                      </button>
+                    </div>
+                  )}
 
               {propuesta.idsDescartados?.length > 0 && (
                 <p className="alert alert-suave">
