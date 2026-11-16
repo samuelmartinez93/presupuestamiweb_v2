@@ -10,6 +10,7 @@ const { validarSolicitud } = require("./validarSolicitud");
 const { generarPropuestaIA, iaDisponible } = require("./ia");
 const validarSeleccion = require("./validarSeleccion");
 const { crearLinea } = require("./catalogo");
+const limitarPeticiones = require("./limitarPeticiones");
 
 // Líneas del presupuesto con nombre y descripción del catálogo (para mostrar y para el PDF).
 function construirLineas(datos) {
@@ -23,8 +24,21 @@ function construirLineas(datos) {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
+// No revelamos la tecnología del servidor en las cabeceras.
+app.disable("x-powered-by");
+// Detrás de un proxy (Vercel) para conocer la IP real del cliente.
+app.set("trust proxy", 1);
+
+// En producción se puede limitar qué web puede llamar a la API (CORS_ORIGIN).
+const origenesPermitidos = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((origen) => origen.trim())
+  : null;
+app.use(cors(origenesPermitidos ? { origin: origenesPermitidos } : undefined));
+
+app.use(express.json({ limit: "20kb" }));
+
+// Cada IP puede pedir como máximo 20 propuestas cada 15 minutos.
+app.use("/api/propuesta", limitarPeticiones({ maximo: 20, ventanaMs: 15 * 60 * 1000 }));
 
 app.get("/api/estado", (req, res) => {
   res.status(200).json({ status: "ok" });
@@ -113,13 +127,33 @@ app.post("/api/presupuesto/seleccion", (req, res) => {
     const datos = validacion.datos;
     const presupuesto = calcularPresupuesto(datos);
 
-    return res.status(200).json({ ...presupuesto, ...datos, lineas: construirLineas(datos) });
+    // La selección va aparte para no pisar los importes (formulario, segundoIdioma) del cálculo.
+    return res.status(200).json({ ...presupuesto, seleccion: datos, lineas: construirLineas(datos) });
   } catch (error) {
     console.error("Error al calcular la selección:", error);
     return res.status(500).json({
       error: "Error interno del servidor."
     });
   }
+});
+
+// Rutas inexistentes: respuesta JSON neutra.
+app.use((req, res) => {
+  res.status(404).json({ error: "Ruta no encontrada." });
+});
+
+// Errores no controlados (por ejemplo, JSON mal formado): nunca se envían
+// detalles internos ni rutas de archivos al cliente.
+// eslint-disable-next-line no-unused-vars
+app.use((error, req, res, next) => {
+  if (error.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "El cuerpo de la petición no es un JSON válido." });
+  }
+  if (error.type === "entity.too.large") {
+    return res.status(413).json({ error: "La petición es demasiado grande." });
+  }
+  console.error("Error no controlado:", error.message);
+  return res.status(500).json({ error: "Error interno del servidor." });
 });
 
 app.listen(PORT, () => {

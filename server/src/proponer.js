@@ -74,7 +74,23 @@ function proponerServiciosDesdeTexto(textoCliente) {
       motivo: 'No está incluido en el catálogo. Pendiente de valorar.'
     }));
 
+  // Resumen y dudas sencillos para que la propuesta tenga la misma estructura que la de la IA.
+  const partes = [
+    tipo === 'corporativa' ? `una web corporativa de ${paginas} página(s)` : 'una landing de una sola página'
+  ];
+  if (secciones.length > 0) partes.push(`con secciones como ${secciones.map((s) => s.nombre).join(', ')}`);
+  if (formulario) partes.push('con formulario de contacto');
+  if (segundoIdioma) partes.push('con el contenido en dos idiomas');
+  const resumen = `El cliente necesita ${partes.join(', ')}.`;
+
+  const dudas = [];
+  if (segundoIdioma) dudas.push('¿Qué segundo idioma se necesita?');
+  if (formulario) dudas.push('¿Qué datos debe recoger el formulario?');
+  if (tipo === 'corporativa' && secciones.length === 0) dudas.push('¿Qué secciones tendrá la web?');
+
   return {
+    resumen,
+    dudas,
     tipo,
     paginas,
     formulario,

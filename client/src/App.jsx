@@ -438,10 +438,10 @@ function App() {
       setDetallePresupuesto(true)
       setError('')
       setFormData({
-        tipo: datos.tipo,
-        paginas: String(datos.paginas),
-        formulario: datos.formulario,
-        segundoIdioma: datos.segundoIdioma
+        tipo: datos.seleccion.tipo,
+        paginas: String(datos.seleccion.paginas),
+        formulario: datos.seleccion.formulario,
+        segundoIdioma: datos.seleccion.segundoIdioma
       })
       setFormularioDesdeIA(true)
       // El resultado aparece arriba, en el resumen: llevamos allí al usuario.
@@ -1058,6 +1058,13 @@ function App() {
                   </div>
 
                   {propuesta.aviso && <p className="alert alert-suave">{propuesta.aviso}</p>}
+
+              {propuesta.idsDescartados?.length > 0 && (
+                <p className="alert alert-suave">
+                  Se han descartado {propuesta.idsDescartados.length} servicio(s) propuestos por la IA que no
+                  existen en el catálogo.
+                </p>
+              )}
 
                   {propuesta.resumen && <p className="propuesta-resumen-texto">{propuesta.resumen}</p>}
 
