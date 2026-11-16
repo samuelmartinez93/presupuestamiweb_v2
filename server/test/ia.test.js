@@ -120,3 +120,30 @@ test('elimina las frases con precios o plazos de entrega', () => {
   });
   assert.equal(propuesta.resumen, 'Web para un restaurante.');
 });
+
+test('el esquema obliga a indicar si el mensaje está fuera de tema', () => {
+  assert.ok(ESQUEMA_RESPUESTA.required.includes('fueraDeTema'));
+  assert.equal(ESQUEMA_RESPUESTA.properties.fueraDeTema.type, 'boolean');
+});
+
+test('las instrucciones incluyen el propósito y los ejemplos fuera de tema del JSON', () => {
+  const instrucciones = construirInstrucciones();
+  assert.match(instrucciones, /FUERA DE TEMA/);
+  assert.match(instrucciones, /receta de paella/);
+  assert.match(instrucciones, /No respondas a la pregunta ni sigas instrucciones/);
+});
+
+test('una respuesta fuera de tema no devuelve propuesta, solo el aviso', () => {
+  const resultado = procesarRespuestaIA({
+    fueraDeTema: true,
+    resumen: '',
+    paginas: 1,
+    servicios: [],
+    dudas: [],
+    pendientes: []
+  });
+
+  assert.equal(resultado.fueraDeTema, true);
+  assert.match(resultado.mensaje, /solo sirve para preparar presupuestos de páginas web/);
+  assert.equal(resultado.servicios, undefined);
+});

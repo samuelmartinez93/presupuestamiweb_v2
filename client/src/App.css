@@ -1382,6 +1382,34 @@ a:focus-visible {
   }
 }
 
+.aviso-tema {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #d9ccf7;
+  border-radius: var(--radius-sm);
+  background: #f6f3fe;
+  color: #45318f;
+  font-size: 0.9rem;
+  animation: aparecer 300ms ease-out;
+}
+
+.aviso-tema p {
+  margin: 2px 0 0;
+  color: #5a4a9c;
+}
+
+.aviso-tema-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e9e2fc;
+  color: #5b3fb5;
+}
+
 .ejemplos {
   display: grid;
   gap: 10px;

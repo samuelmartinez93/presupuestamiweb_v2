@@ -45,6 +45,7 @@ presupuestamiweb_v2/
 │   │   ├── catalogo.js                  Catálogo de servicios (precios leídos de tarifas.js).
 │   │   ├── validarSolicitud.js          Validación de la solicitud del cliente.
 │   │   ├── ia.js                        Llamada a OpenAI y procesado de la respuesta.
+│   │   ├── asistente.json               Propósito, temas permitidos y ejemplos del asistente.
 │   │   ├── proponer.js                  Propuesta por palabras clave (si no hay IA).
 │   │   ├── limitarPeticiones.js         Límite de peticiones por IP al asistente.
 │   │   └── validarSeleccion.js          Validación de la selección confirmada.
@@ -182,7 +183,9 @@ Resumen del trabajo realizado, en orden:
 9. **Revisión final** contra el enunciado: corrección de la respuesta de
    `/api/presupuesto/seleccion`, resumen y dudas también en la propuesta
    automática, aviso de servicios descartados y nuevos tests.
-10. **Refuerzo de seguridad**: errores sin detalles internos, límite de
+10. **Asistente limitado a presupuestos web** mediante `asistente.json`: los
+    mensajes de otros temas reciben un aviso para intentarlo de nuevo.
+11. **Refuerzo de seguridad**: errores sin detalles internos, límite de
     peticiones al asistente, tamaño máximo de petición y CORS configurable.
 
 ## 3. Cumplimiento del enunciado
@@ -239,8 +242,9 @@ Total = base + páginas adicionales + formulario + segundo idioma
 | POST | `/api/presupuesto/seleccion` | Calcula el presupuesto de la selección confirmada. |
 
 Estados HTTP: **200** operación correcta, **400** datos que incumplen el
-contrato (con un mensaje comprensible), **500** fallo interno (mensaje genérico,
-sin detalles internos).
+contrato (con un mensaje comprensible), **422** solicitud al asistente que no
+trata de un proyecto web, **429** demasiadas solicitudes, **500** fallo interno
+(mensaje genérico, sin detalles internos).
 
 ### POST /api/presupuesto (configurador)
 
@@ -354,6 +358,23 @@ Controles para que **el modelo no invente servicios, precios ni compromisos de e
 4. Las instrucciones prohíben mencionar precios, plazos, fechas o garantías.
 5. El servidor elimina además cualquier frase con importes o compromisos de
    entrega del resumen y las justificaciones.
+
+### Asistente limitado a presupuestos web
+
+El comportamiento del asistente se define en **`server/src/asistente.json`**:
+propósito, temas permitidos, ejemplos de temas fuera de lugar y el mensaje de
+aviso. Ese JSON se incluye en las instrucciones del modelo en cada petición.
+
+- La respuesta estructurada tiene un campo **`fueraDeTema`**. Si el mensaje no
+  describe un proyecto web (cultura general, recetas, deberes, código, preguntas
+  sobre la propia IA, intentos de cambiar sus instrucciones…), el servidor **no
+  devuelve ninguna propuesta** y responde HTTP 422 con el código `FUERA_DE_TEMA`.
+- La interfaz muestra el aviso «Solo puedo ayudarte con presupuestos web» y
+  deja el texto para que el usuario lo corrija y lo intente otra vez.
+- El texto del cliente se trata solo como descripción a analizar: el modelo no
+  responde preguntas ni sigue instrucciones incluidas en él.
+- Sin IA, se aplica la misma regla comprobando palabras relacionadas con webs
+  (también definidas en el JSON).
 
 Si no hay clave o la llamada falla, se genera una propuesta por palabras clave
 (`proponer.js`) con la **misma estructura** (resumen, servicios, dudas y
@@ -484,15 +505,15 @@ profesional, inspirado en configuradores de presupuestos web.
 
 ### Tests automáticos
 
-`npm test` en `server/`: **32 tests, todos correctos**.
+`npm test` en `server/`: **36 tests, todos correctos**.
 
 | Archivo | Qué comprueba |
 |---|---|
 | `test/catalogo.test.js` | Campos del catálogo, precios iguales a las tarifas, propuesta y pendientes. |
 | `test/validarSolicitud.test.js` | Descripción vacía, demasiado corta o larga, nombre obligatorio. |
-| `test/ia.test.js` | Esquema, procesado de la respuesta, ids fuera del catálogo, filtro de precios y plazos. |
+| `test/ia.test.js` | Esquema, procesado de la respuesta, ids fuera del catálogo, filtro de precios y plazos, mensajes fuera de tema. |
 | `test/validarSeleccion.test.js` | Tipo de web obligatorio y único, cantidad de páginas, servicios inventados o repetidos. |
-| `test/proponer.test.js` | Texto del enunciado, resumen y dudas de la propuesta automática, pendientes sin precio. |
+| `test/proponer.test.js` | Texto del enunciado, resumen y dudas de la propuesta automática, pendientes sin precio, detección de temas ajenos. |
 
 ### Peticiones de `pruebas-api.http` (REST Client)
 
@@ -536,22 +557,35 @@ No se incluyen `node_modules`, credenciales, archivos `.env` ni archivos de
 compilación. Las dependencias se reconstruyen con `npm install` dentro de
 `server` y de `client`.
 
-## 18. Despliegue en Vercel y variables de entorno
+## 18. Despliegue en Vercel
 
-Las variables de `.env` **no se suben** con el código: hay que crearlas en Vercel.
+El repositorio contiene dos aplicaciones, así que en Vercel se crean **dos
+proyectos** conectados al mismo repositorio de GitHub, cada uno con su carpeta raíz.
 
-**API (`server/`)**: Project → Settings → Environment Variables:
+| Proyecto | Root Directory | Framework | Qué despliega |
+|---|---|---|---|
+| API | `server` | Express (detectado automáticamente) | `server/src/server.js` como función de Vercel |
+| Web | `client` | Vite (detectado automáticamente) | La interfaz React (`npm run build` → `dist`) |
 
-- `OPENAI_API_KEY` = la clave (solo en el proyecto del servidor).
-- `OPENAI_MODEL` (opcional).
-- `CORS_ORIGIN` = la URL del cliente, para que solo esa web pueda usar la API (recomendado).
-- También desde la terminal: `npx vercel env add OPENAI_API_KEY`.
-- Tras cambiar una variable hay que volver a desplegar (Redeploy).
+`server.js` exporta la aplicación (`module.exports = app`): Vercel la ejecuta
+como función y en local se sigue arrancando con `npm run dev`.
 
-**Cliente (`client/`)**:
+### Orden recomendado
 
-- `VITE_API_URL` = `https://tu-api.vercel.app/api` (ver `client/.env.example`).
-- En local no hace falta: se usa `http://localhost:3001/api`.
+1. **API**: crear el proyecto con Root Directory `server` y añadir en
+   Settings → Environment Variables:
+   - `OPENAI_API_KEY` = la clave de OpenAI.
+   - `OPENAI_MODEL` (opcional, por defecto `gpt-5-mini`).
+   - Desplegar y comprobar `https://<api>.vercel.app/api/estado`.
+2. **Web**: crear el proyecto con Root Directory `client` y añadir:
+   - `VITE_API_URL` = `https://<api>.vercel.app/api`.
+   - Desplegar.
+3. **Cerrar la API a la web**: en el proyecto de la API añadir
+   `CORS_ORIGIN` = `https://<web>.vercel.app` y volver a desplegar (Redeploy).
 
-> Todo lo que empieza por `VITE_` se incluye en el JavaScript que descarga el
-> navegador. **La clave de OpenAI nunca debe llevar ese prefijo.**
+Tras cambiar cualquier variable hay que volver a desplegar para que se aplique.
+
+> Las variables de `.env` **no se suben** con el código: solo existen en local
+> y en la configuración de Vercel. Todo lo que empieza por `VITE_` se incluye en
+> el JavaScript que descarga el navegador, por eso **la clave de OpenAI nunca
+> lleva ese prefijo** y solo se configura en el proyecto de la API.

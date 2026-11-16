@@ -1,4 +1,5 @@
 const { crearLinea } = require('./catalogo');
+const { palabrasClaveWeb } = require('./asistente.json');
 
 const MAX_PAGINAS = 20;
 
@@ -40,6 +41,12 @@ function limpiarTexto(texto) {
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Sin IA, se considera que habla de una web si menciona alguna palabra relacionada.
+function esSolicitudWeb(textoCliente) {
+  const texto = limpiarTexto(textoCliente);
+  return palabrasClaveWeb.some((palabra) => new RegExp(`\\b${palabra}\\b`).test(texto));
 }
 
 function proponerServiciosDesdeTexto(textoCliente) {
@@ -104,5 +111,6 @@ function proponerServiciosDesdeTexto(textoCliente) {
 
 module.exports = {
   proponerServiciosDesdeTexto,
+  esSolicitudWeb,
   MAX_PAGINAS
 };

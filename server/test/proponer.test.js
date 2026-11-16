@@ -30,3 +30,12 @@ test('lo que no está en el catálogo queda pendiente de valorar, sin precio', (
   assert.ok(necesidades.includes('Blog'));
   assert.ok(propuesta.servicios.every((servicio) => !/tienda|blog|pago/i.test(servicio.id)));
 });
+
+const { esSolicitudWeb } = require('../src/proponer');
+
+test('sin IA, detecta si el texto habla de una web o de otro tema', () => {
+  assert.equal(esSolicitudWeb(ENUNCIADO), true);
+  assert.equal(esSolicitudWeb('Quiero una página para mi clínica dental'), true);
+  assert.equal(esSolicitudWeb('¿Quién ganó el último mundial de fútbol?'), false);
+  assert.equal(esSolicitudWeb('Dame una receta de paella para seis personas'), false);
+});

@@ -123,6 +123,7 @@ function App() {
   const [solicitudCliente, setSolicitudCliente] = useState('')
   const [propuesta, setPropuesta] = useState(null)
   const [propuestaError, setPropuestaError] = useState('')
+  const [fueraDeTema, setFueraDeTema] = useState(false)
   const [isAnalizando, setIsAnalizando] = useState(false)
   const [detallePresupuesto, setDetallePresupuesto] = useState(false)
   const [formularioDesdeIA, setFormularioDesdeIA] = useState(false)
@@ -298,6 +299,7 @@ function App() {
     }
 
     setPropuestaError('')
+    setFueraDeTema(false)
     setIsAnalizando(true)
 
     try {
@@ -310,6 +312,14 @@ function App() {
       })
 
       const datos = await respuesta.json()
+
+      // El asistente solo atiende presupuestos web: avisamos y dejamos el texto para corregirlo.
+      if (datos?.codigo === 'FUERA_DE_TEMA') {
+        setFueraDeTema(true)
+        setPropuestaError(datos.error)
+        document.getElementById('solicitud-cliente')?.focus({ preventScroll: true })
+        return
+      }
 
       if (!respuesta.ok) {
         throw new Error(datos?.error || 'No se pudo generar la propuesta.')
@@ -983,11 +993,22 @@ function App() {
                   </small>
                 </div>
 
-                {propuestaError && (
-                  <p className="alert" role="alert">
-                    {propuestaError}
-                  </p>
-                )}
+                {propuestaError &&
+                  (fueraDeTema ? (
+                    <div className="aviso-tema" role="alert">
+                      <span className="aviso-tema-icono" aria-hidden="true">
+                        ✦
+                      </span>
+                      <div>
+                        <strong>Solo puedo ayudarte con presupuestos web</strong>
+                        <p>{propuestaError}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="alert" role="alert">
+                      {propuestaError}
+                    </p>
+                  ))}
 
                 <button className="primary-button" type="submit" disabled={isAnalizando} aria-busy={isAnalizando}>
                   {isAnalizando ? 'Analizando…' : 'Analizar solicitud'}

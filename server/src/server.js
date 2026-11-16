@@ -5,7 +5,8 @@ const tarifas = require("./tarifas");
 const validarPresupuesto = require("./validar");
 const calcularPresupuesto = require("./calcular");
 const { serviciosCatalogo } = require("./catalogo");
-const { proponerServiciosDesdeTexto } = require("./proponer");
+const { proponerServiciosDesdeTexto, esSolicitudWeb } = require("./proponer");
+const { mensajeFueraDeTema } = require("./asistente.json");
 const { validarSolicitud } = require("./validarSolicitud");
 const { generarPropuestaIA, iaDisponible } = require("./ia");
 const validarSeleccion = require("./validarSeleccion");
@@ -40,6 +41,11 @@ app.use(express.json({ limit: "20kb" }));
 // Cada IP puede pedir como máximo 20 propuestas cada 15 minutos.
 app.use("/api/propuesta", limitarPeticiones({ maximo: 20, ventanaMs: 15 * 60 * 1000 }));
 
+// Raíz de la API: confirma que el servicio está en marcha.
+app.get("/", (req, res) => {
+  res.status(200).json({ servicio: "API Presupuesta mi web", estado: "/api/estado" });
+});
+
 app.get("/api/estado", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
@@ -51,6 +57,11 @@ app.get("/api/tarifas", (req, res) => {
 app.get("/api/catalogo", (req, res) => {
   res.status(200).json({ servicios: serviciosCatalogo });
 });
+
+// El asistente solo sirve para presupuestos web: el resto de temas se rechaza con un aviso.
+function responderFueraDeTema(res) {
+  return res.status(422).json({ error: mensajeFueraDeTema, codigo: "FUERA_DE_TEMA" });
+}
 
 app.post("/api/propuesta", async (req, res) => {
   try {
@@ -68,9 +79,15 @@ app.post("/api/propuesta", async (req, res) => {
     if (iaDisponible()) {
       try {
         const propuesta = await generarPropuestaIA({ nombre, descripcion });
+        if (propuesta.fueraDeTema) {
+          return responderFueraDeTema(res);
+        }
         return res.status(200).json({ cliente: nombre, ...propuesta });
       } catch (error) {
         console.error("Error al consultar la IA:", error.message);
+        if (!esSolicitudWeb(descripcion)) {
+          return responderFueraDeTema(res);
+        }
         const propuesta = proponerServiciosDesdeTexto(descripcion);
         return res.status(200).json({
           cliente: nombre,
@@ -79,6 +96,10 @@ app.post("/api/propuesta", async (req, res) => {
           aviso: "No se pudo contactar con la IA. Se muestra una propuesta automática por palabras clave."
         });
       }
+    }
+
+    if (!esSolicitudWeb(descripcion)) {
+      return responderFueraDeTema(res);
     }
 
     const propuesta = proponerServiciosDesdeTexto(descripcion);
@@ -156,11 +177,17 @@ app.use((error, req, res, next) => {
   return res.status(500).json({ error: "Error interno del servidor." });
 });
 
-app.listen(PORT, () => {
-  console.log(`API escuchando en http://localhost:${PORT}`);
-  console.log(
-    iaDisponible()
-      ? "IA activada (OPENAI_API_KEY encontrada)."
-      : "IA desactivada: falta OPENAI_API_KEY en server/.env. Se usarán reglas por palabras clave."
-  );
-});
+// En local (npm start / npm run dev) se arranca el servidor en un puerto.
+// En Vercel no: la plataforma importa la app exportada y la ejecuta como función.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`API escuchando en http://localhost:${PORT}`);
+    console.log(
+      iaDisponible()
+        ? "IA activada (OPENAI_API_KEY encontrada)."
+        : "IA desactivada: falta OPENAI_API_KEY en server/.env. Se usarán reglas por palabras clave."
+    );
+  });
+}
+
+module.exports = app;
