@@ -13,7 +13,9 @@ gsap.registerPlugin(ScrollTrigger)
 // jsPDF es pesado: solo se descarga cuando se abre la vista previa.
 const VistaPreviaPDF = lazy(() => import('./pdf/VistaPreviaPDF'))
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// En Vercel la web y la API comparten dominio (/api); en local la API está en el puerto 3001.
+const API_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api')
 
 // Deben coincidir con los límites de server/src/validarSolicitud.js
 const NOMBRE_MAX = 100

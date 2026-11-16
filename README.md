@@ -54,6 +54,7 @@ presupuestamiweb_v2/
 │   ├── package.json
 │   └── package-lock.json
 ├── pruebas-api.http                     Peticiones para REST Client.
+├── vercel.json                          Despliegue de web y API en un solo proyecto.
 ├── .gitignore
 └── README.md
 ```
@@ -559,33 +560,30 @@ compilación. Las dependencias se reconstruyen con `npm install` dentro de
 
 ## 18. Despliegue en Vercel
 
-El repositorio contiene dos aplicaciones, así que en Vercel se crean **dos
-proyectos** conectados al mismo repositorio de GitHub, cada uno con su carpeta raíz.
+La web y la API se despliegan en **un solo proyecto de Vercel y un solo
+dominio** gracias a *Vercel Services*, configurado en `vercel.json`:
 
-| Proyecto | Root Directory | Framework | Qué despliega |
-|---|---|---|---|
-| API | `server` | Express (detectado automáticamente) | `server/src/server.js` como función de Vercel |
-| Web | `client` | Vite (detectado automáticamente) | La interfaz React (`npm run build` → `dist`) |
+| Servicio | Carpeta | Ruta pública |
+|---|---|---|
+| `web` (Vite) | `client/` | `https://<proyecto>.vercel.app/` |
+| `api` (Express) | `server/` | `https://<proyecto>.vercel.app/api/...` |
 
-`server.js` exporta la aplicación (`module.exports = app`): Vercel la ejecuta
-como función y en local se sigue arrancando con `npm run dev`.
+- La API recibe la ruta completa (`/api/estado`), igual que en local.
+- En producción la web llama a `/api` del mismo dominio, por lo que no hace falta
+  configurar la URL de la API ni CORS.
+- `server.js` exporta la aplicación (`module.exports = app`) para que Vercel la
+  ejecute como función; en local se sigue arrancando con `npm run dev`.
 
-### Orden recomendado
+### Pasos
 
-1. **API**: crear el proyecto con Root Directory `server` y añadir en
-   Settings → Environment Variables:
-   - `OPENAI_API_KEY` = la clave de OpenAI.
-   - `OPENAI_MODEL` (opcional, por defecto `gpt-5-mini`).
-   - Desplegar y comprobar `https://<api>.vercel.app/api/estado`.
-2. **Web**: crear el proyecto con Root Directory `client` y añadir:
-   - `VITE_API_URL` = `https://<api>.vercel.app/api`.
-   - Desplegar.
-3. **Cerrar la API a la web**: en el proyecto de la API añadir
-   `CORS_ORIGIN` = `https://<web>.vercel.app` y volver a desplegar (Redeploy).
+1. En Vercel, **Add New → Project** e importar el repositorio de GitHub.
+2. Dejar **Root Directory** en `./` y el preset **Services**.
+3. En **Environment Variables** añadir `OPENAI_API_KEY` con la clave de OpenAI
+   (marcada como *Sensitive*). `OPENAI_MODEL` es opcional.
+4. Pulsar **Deploy** y comprobar `https://<proyecto>.vercel.app/api/estado`.
 
-Tras cambiar cualquier variable hay que volver a desplegar para que se aplique.
+Tras cambiar cualquier variable hay que volver a desplegar (Redeploy).
 
 > Las variables de `.env` **no se suben** con el código: solo existen en local
-> y en la configuración de Vercel. Todo lo que empieza por `VITE_` se incluye en
-> el JavaScript que descarga el navegador, por eso **la clave de OpenAI nunca
-> lleva ese prefijo** y solo se configura en el proyecto de la API.
+> y en la configuración de Vercel. Solo las variables que empiezan por `VITE_`
+> llegan al navegador, por eso **la clave de OpenAI nunca lleva ese prefijo**.
