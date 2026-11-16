@@ -1,0 +1,273 @@
+/* ---------- Fondo digital del hero ---------- */
+.hero-fondo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-red {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Rejilla tipo plano técnico que se desvanece hacia los bordes */
+.hero-rejilla {
+  position: absolute;
+  inset: -64px 0 0;
+  background-image:
+    linear-gradient(rgba(159, 182, 211, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159, 182, 211, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 80% at 70% 40%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 70% 40%, #000 20%, transparent 75%);
+  animation: rejilla-avanzar 12s linear infinite;
+}
+
+@keyframes rejilla-avanzar {
+  to {
+    translate: 0 64px;
+  }
+}
+
+/* Haz de luz que recorre el hero de lado a lado */
+.hero-escaner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -30%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(159, 182, 211, 0.07), transparent);
+  transform: skewX(-12deg);
+  animation: escanear 9s ease-in-out infinite;
+}
+
+@keyframes escanear {
+  0% {
+    left: -30%;
+  }
+  60%,
+  100% {
+    left: 110%;
+  }
+}
+
+/* ---------- Maqueta de web ---------- */
+.hero-mockup {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 470px);
+  padding: 28px 0 40px;
+}
+
+.mockup-ventana {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 40px 80px -30px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  transform: perspective(1400px) rotateY(-9deg) rotateX(4deg);
+  animation: flotar 8s ease-in-out infinite;
+}
+
+.mockup-barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mockup-barra i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.mockup-url {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto;
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(214, 224, 235, 0.7);
+  font-size: 0.7rem;
+}
+
+.mockup-cuerpo {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+/* Bloques que se "construyen" uno detrás de otro en bucle */
+.mk {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(159, 182, 211, 0.28), rgba(159, 182, 211, 0.12));
+  transform-origin: left center;
+  animation: construir 7s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.25s);
+}
+
+.mk-nav {
+  width: 40%;
+  height: 10px;
+}
+
+.mk-portada {
+  height: 96px;
+  border-radius: 10px;
+  background:
+    radial-gradient(60% 90% at 80% 20%, rgba(127, 209, 168, 0.28), transparent 60%),
+    linear-gradient(135deg, rgba(119, 141, 169, 0.45), rgba(65, 90, 119, 0.25));
+}
+
+.mk-linea {
+  width: 85%;
+}
+
+.mk-linea.corta {
+  width: 55%;
+}
+
+.mk-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.mk-tarjetas .mk {
+  height: 58px;
+  border-radius: 8px;
+}
+
+.mk-boton {
+  width: 34%;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(127, 209, 168, 0.4);
+}
+
+@keyframes construir {
+  0% {
+    opacity: 0;
+    scale: 0.6 1;
+  }
+  10%,
+  85% {
+    opacity: 1;
+    scale: 1 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1 1;
+  }
+}
+
+@keyframes flotar {
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+/* Etiquetas de servicios y total, flotando sobre la maqueta */
+.mockup-chip,
+.mockup-total {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 16px 32px -14px rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.mockup-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: flotar 6s ease-in-out infinite;
+}
+
+.mockup-chip b {
+  color: #7fd1a8;
+}
+
+.chip-check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(127, 209, 168, 0.25);
+  color: #7fd1a8;
+  font-size: 0.7rem;
+}
+
+.chip-1 {
+  top: 34%;
+  left: -64px;
+  animation-delay: -1.5s;
+}
+
+.chip-2 {
+  top: 60%;
+  right: -12px;
+  animation-delay: -3.5s;
+}
+
+.mockup-total {
+  bottom: 0;
+  left: -24px;
+  display: grid;
+  padding: 12px 18px;
+  border-radius: 16px;
+  animation: flotar 7s ease-in-out infinite;
+}
+
+.mockup-total small {
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b7c8dc;
+}
+
+.mockup-total strong {
+  font-size: 1.7rem;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1080px) {
+  .hero-mockup {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fondo *,
+  .hero-mockup,
+  .hero-mockup * {
+    animation: none !important;
+  }
+}

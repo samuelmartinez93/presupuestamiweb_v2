@@ -1,5 +1,8 @@
 import { jsPDF } from 'jspdf'
 import { autoTable } from 'jspdf-autotable'
+import { fechaValidez } from './referencia'
+
+export { fechaValidez }
 
 // Paleta del proyecto
 const COLOR = {
@@ -33,14 +36,15 @@ export const euros = (valor) =>
 export const fechaLarga = (fecha) =>
   fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 
-export function nombreArchivo(cliente, fecha) {
+export function nombreArchivo(cliente, fecha, referencia) {
   const limpio = String(cliente || 'cliente')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase()
-  return `presupuesto-${limpio || 'cliente'}-${fecha.toISOString().slice(0, 10)}.pdf`
+  const sufijo = referencia ? referencia.toLowerCase() : fecha.toISOString().slice(0, 10)
+  return `presupuesto-${limpio || 'cliente'}-${sufijo}.pdf`
 }
 
 function titulo(doc, texto, y) {
@@ -82,14 +86,27 @@ function parrafo(doc, texto, y) {
  * @param {object} datos
  * @param {string} datos.cliente
  * @param {Date} datos.fecha
+ * @param {string} [datos.referencia]
  * @param {string} datos.resumen
  * @param {Array<{nombre, descripcion, cantidad, precio, subtotal}>} datos.lineas
  * @param {number} datos.total
  * @param {string[]} datos.aclaraciones
  */
-export function generarPresupuestoPDF({ cliente, fecha, resumen, lineas, total, aclaraciones }) {
+export function generarPresupuestoPDF({
+  cliente,
+  fecha,
+  referencia,
+  resumen,
+  lineas,
+  total,
+  aclaraciones
+}) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  doc.setProperties({ title: `Presupuesto - ${cliente}`, creator: 'Presupuesta mi web' })
+  doc.setProperties({
+    title: `Presupuesto ${referencia || ''} - ${cliente}`.replace(/\s+/g, ' '),
+    subject: referencia || '',
+    creator: 'Presupuesta mi web'
+  })
 
   // Cabecera
   doc.setFillColor(...COLOR.navy)
@@ -107,13 +124,29 @@ export function generarPresupuestoPDF({ cliente, fecha, resumen, lineas, total, 
   doc.setTextColor(...COLOR.gris)
   doc.text('Presupuesta mi web', MARGEN, 28)
 
+  if (referencia) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(...COLOR.gris)
+    doc.text('REFERENCIA', ANCHO_PAGINA - MARGEN, 15, { align: 'right' })
+    doc.setFontSize(12)
+    doc.setTextColor(255, 255, 255)
+    doc.text(referencia, ANCHO_PAGINA - MARGEN, 21.5, { align: 'right' })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.setTextColor(...COLOR.gris)
+    doc.text(`Válido hasta el ${fechaLarga(fechaValidez(fecha))}`, ANCHO_PAGINA - MARGEN, 28, {
+      align: 'right'
+    })
+  }
+
   // Cliente
   let y = 54
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.setTextColor(...COLOR.gris)
   doc.text('CLIENTE', MARGEN, y)
-  doc.text('FECHA', ANCHO_PAGINA - MARGEN, y, { align: 'right' })
+  doc.text('FECHA DE EMISIÓN', ANCHO_PAGINA - MARGEN, y, { align: 'right' })
 
   y += 7
   doc.setFontSize(14)
@@ -227,7 +260,7 @@ export function generarPresupuestoPDF({ cliente, fecha, resumen, lineas, total, 
     doc.setFontSize(8)
     doc.setTextColor(...COLOR.suave)
     doc.text(
-      'Presupuesto orientativo. No incluye compromisos de plazos de entrega.',
+      `${referencia ? `Ref. ${referencia} · ` : ''}Presupuesto orientativo. No incluye compromisos de plazos de entrega.`,
       MARGEN,
       ALTO_PAGINA - 10
     )

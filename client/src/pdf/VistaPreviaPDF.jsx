@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { euros, generarPresupuestoPDF, nombreArchivo } from './generarPresupuestoPDF'
+import {
+  euros,
+  fechaLarga,
+  fechaValidez,
+  generarPresupuestoPDF,
+  nombreArchivo
+} from './generarPresupuestoPDF'
 import './VistaPreviaPDF.css'
 
 const separarLineas = (texto) =>
@@ -9,9 +15,8 @@ const separarLineas = (texto) =>
     .filter(Boolean)
 
 // Ventana para revisar el contenido del presupuesto antes de descargar el PDF.
-function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
+function VistaPreviaPDF({ inicial, lineas, total, fecha, referencia, onCerrar, onDescargado }) {
   const dialogo = useRef(null)
-  const [fecha] = useState(() => new Date())
   const [cliente, setCliente] = useState(inicial.cliente)
   const [resumen, setResumen] = useState(inicial.resumen)
   const [aclaraciones, setAclaraciones] = useState(inicial.aclaraciones)
@@ -24,6 +29,7 @@ function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
   const datosPDF = () => ({
     cliente: cliente.trim() || 'Cliente sin indicar',
     fecha,
+    referencia,
     resumen: resumen.trim() || 'Sin resumen.',
     lineas,
     total,
@@ -52,7 +58,8 @@ function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
 
   const descargar = () => {
     if (!puedeDescargar) return
-    generarPresupuestoPDF(datosPDF()).save(nombreArchivo(cliente, fecha))
+    generarPresupuestoPDF(datosPDF()).save(nombreArchivo(cliente, fecha, referencia))
+    onDescargado('revisada')
     onCerrar()
   }
 
@@ -61,6 +68,7 @@ function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
       ref={dialogo}
       className="vista-pdf"
       aria-labelledby="vista-pdf-titulo"
+      aria-describedby="vista-pdf-desc"
       onCancel={(event) => {
         event.preventDefault()
         onCerrar()
@@ -68,17 +76,39 @@ function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
     >
       <header className="vista-pdf-cabecera">
         <div>
-          <span className="panel-kicker">Paso final</span>
+          <span className="panel-kicker">Vista previa · {referencia}</span>
           <h2 id="vista-pdf-titulo">Revisa tu presupuesto</h2>
-          <p>Comprueba el contenido y corrige lo que necesites antes de descargar el PDF.</p>
+          <p id="vista-pdf-desc">
+            Comprueba el contenido y corrige lo que necesites. La vista previa se actualiza al escribir.
+          </p>
         </div>
-        <button type="button" className="vista-pdf-cerrar" onClick={onCerrar} aria-label="Cerrar">
+        <button
+          type="button"
+          className="vista-pdf-cerrar"
+          onClick={onCerrar}
+          aria-label="Cerrar la vista previa"
+        >
           ×
         </button>
       </header>
 
       <div className="vista-pdf-cuerpo">
         <div className="vista-pdf-campos">
+          <dl className="vista-pdf-meta">
+            <div>
+              <dt>Referencia</dt>
+              <dd>{referencia}</dd>
+            </div>
+            <div>
+              <dt>Emitido</dt>
+              <dd>{fechaLarga(fecha)}</dd>
+            </div>
+            <div>
+              <dt>Válido hasta</dt>
+              <dd>{fechaLarga(fechaValidez(fecha))}</dd>
+            </div>
+          </dl>
+
           <div className="field">
             <label htmlFor="pdf-cliente">Cliente o empresa</label>
             <input
@@ -147,9 +177,11 @@ function VistaPreviaPDF({ inicial, lineas, total, onCerrar }) {
 
         <div className="vista-pdf-preview">
           {urlVistaPrevia ? (
-            <iframe title="Vista previa del PDF" src={`${urlVistaPrevia}#view=FitH`} />
+            <iframe title={`Vista previa del PDF ${referencia}`} src={`${urlVistaPrevia}#view=FitH`} />
           ) : (
-            <p className="vista-pdf-cargando">Generando vista previa…</p>
+            <p className="vista-pdf-cargando" role="status">
+              Generando vista previa…
+            </p>
           )}
           {urlVistaPrevia && (
             <a href={urlVistaPrevia} target="_blank" rel="noreferrer" className="vista-pdf-abrir">

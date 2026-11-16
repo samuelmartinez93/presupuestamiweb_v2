@@ -2,21 +2,29 @@
   width: min(1180px, calc(100% - 32px));
   max-height: calc(100vh - 48px);
   padding: 0;
-  border: 1px solid rgba(212, 224, 238, 0.2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, #1b293e 0%, #141f31 100%);
+  background: var(--surface);
   color: var(--text);
-  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 40px 80px -20px rgba(13, 27, 42, 0.45);
   overflow: hidden;
 }
 
 .vista-pdf[open] {
   display: flex;
   flex-direction: column;
+  animation: vista-pdf-entrar 200ms ease-out;
+}
+
+@keyframes vista-pdf-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
 }
 
 .vista-pdf::backdrop {
-  background: rgba(10, 20, 34, 0.6);
+  background: rgba(13, 27, 42, 0.55);
   backdrop-filter: blur(4px);
 }
 
@@ -25,14 +33,14 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  padding: 28px 32px 20px;
-  border-bottom: 1px solid var(--line);
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .vista-pdf-cabecera h2 {
-  margin: 4px 0 6px;
-  font-size: 1.6rem;
-  letter-spacing: -0.03em;
+  margin: 6px 0 4px;
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
 }
 
 .vista-pdf-cabecera p {
@@ -42,15 +50,20 @@
 
 .vista-pdf-cerrar {
   flex: none;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--line);
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--surface);
   color: var(--text);
   font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
+  transition: background var(--transition);
+}
+
+.vista-pdf-cerrar:hover {
+  background: var(--surface-2);
 }
 
 .vista-pdf-cuerpo {
@@ -69,8 +82,37 @@
   overflow-y: auto;
 }
 
+.vista-pdf-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 20px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}
+
+.vista-pdf-meta dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.vista-pdf-meta div:first-child dd {
+  white-space: nowrap;
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+}
+
+.vista-pdf-meta dd {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
 .vista-pdf-campos [aria-invalid='true'] {
-  border-color: var(--danger-border);
+  border-color: var(--danger);
 }
 
 .vista-pdf-servicios {
@@ -78,8 +120,8 @@
   gap: 8px;
   padding: 16px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
 .vista-pdf-servicios ul {
@@ -102,7 +144,7 @@
 
 .vista-pdf-servicios p {
   padding-top: 8px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
   color: var(--text);
   font-weight: 650;
 }
@@ -124,7 +166,7 @@
   flex: 1;
   width: 100%;
   min-height: 60vh;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: #fff;
 }
@@ -136,44 +178,24 @@
 
 .vista-pdf-abrir {
   align-self: flex-end;
-  color: var(--accent-strong);
+  color: var(--accent);
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .vista-pdf-acciones {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 18px 32px 24px;
-  border-top: 1px solid var(--line);
+  padding: 16px 32px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
-.secondary-button {
-  border: 1px solid rgba(212, 224, 238, 0.25);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-weight: 650;
-  padding: 0.95rem 1.25rem;
-  cursor: pointer;
-  transition: background var(--transition);
-}
-
-.secondary-button:hover {
-  background: var(--surface-hover);
-}
-
-.secondary-button:focus-visible,
 .vista-pdf-cerrar:focus-visible,
 .vista-pdf-abrir:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.boton-pdf {
-  width: 100%;
-  margin-top: 18px;
 }
 
 @media (max-width: 900px) {
@@ -195,5 +217,15 @@
   .vista-pdf-acciones {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  .vista-pdf-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vista-pdf[open] {
+    animation: none;
   }
 }

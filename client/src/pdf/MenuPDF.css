@@ -1,0 +1,225 @@
+.menu-pdf {
+  position: relative;
+}
+
+.menu-pdf-toggle {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.menu-pdf-flecha {
+  margin-left: auto;
+  transition: transform var(--transition);
+}
+
+.menu-pdf-toggle[aria-expanded='true'] .menu-pdf-flecha {
+  transform: rotate(180deg);
+}
+
+.menu-pdf-panel {
+  margin-top: 10px;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  animation: menu-pdf-entrar 160ms ease-out;
+}
+
+@keyframes menu-pdf-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- Miniatura del documento (imita el PDF) ---------- */
+.miniatura {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 14px 14px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #e9eef4, #dfe6ee);
+  cursor: zoom-in;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+}
+
+.miniatura-hoja {
+  display: flex;
+  flex-direction: column;
+  height: 236px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 8px 22px -8px rgba(13, 27, 42, 0.35);
+  color: #212936;
+  font-size: 7px;
+  line-height: 1.4;
+  transition: transform var(--transition);
+  transform-origin: top center;
+}
+
+.miniatura:hover .miniatura-hoja {
+  transform: translateY(-2px);
+}
+
+.miniatura-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #0d1b2a;
+  border-bottom: 2px solid #415a77;
+  color: #fff;
+}
+
+.miniatura-cabecera b {
+  display: block;
+  font-size: 11px;
+}
+
+.miniatura-cabecera i {
+  font-style: normal;
+  color: #778da9;
+}
+
+.miniatura-ref {
+  font-weight: 700;
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.miniatura-cliente {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px 2px;
+}
+
+.miniatura-cliente > span:last-child {
+  text-align: right;
+}
+
+.miniatura-cliente small,
+.miniatura-titulo {
+  display: block;
+  font-size: 5.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #778da9;
+}
+
+.miniatura-cliente b {
+  font-size: 8.5px;
+  color: #0d1b2a;
+}
+
+.miniatura-titulo {
+  padding: 7px 12px 2px;
+  color: #415a77;
+}
+
+.miniatura-texto {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.miniatura-tabla {
+  display: grid;
+  margin: 2px 12px 0;
+}
+
+.miniatura-tabla > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2.5px 0;
+  border-bottom: 0.5px solid #d8dee6;
+}
+
+.miniatura-tabla > span:first-child {
+  border-top: 7px solid #1b263b;
+}
+
+.miniatura-total {
+  background: #ecf0f5;
+  font-weight: 700;
+  color: #0d1b2a;
+  padding: 3px 4px !important;
+}
+
+.miniatura-lupa {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 26px 0 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--text);
+  background: linear-gradient(180deg, transparent, rgba(244, 246, 249, 0.96) 60%);
+}
+
+.miniatura:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Datos y acciones ---------- */
+.menu-pdf-meta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin: 0;
+}
+
+.menu-pdf-meta div:last-child {
+  text-align: right;
+}
+
+.menu-pdf-meta dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.menu-pdf-meta dd {
+  margin: 2px 0 0;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.menu-pdf-acciones {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-pdf-acciones button {
+  width: 100%;
+}
+
+.menu-pdf-aviso {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-pdf-panel {
+    animation: none;
+  }
+}
